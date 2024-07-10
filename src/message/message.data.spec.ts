@@ -47,7 +47,7 @@ describe('MessageData', () => {
 
   beforeEach(
     async () => {
-      messageData.deleteMany();
+    messageData.deleteMany();
     }
   );
 
@@ -73,16 +73,16 @@ describe('MessageData', () => {
 
       expect(message).toMatchObject(
         {
-          likes: [],
-          resolved: false,
-          deleted: false,
-          reactions: [],
-          text: 'Hello world',
-          senderId: senderId,
-          conversationId: conversationId,
-          conversation: { id: conversationId.toHexString() },
-          likesCount: 0,
-          sender: { id: senderId.toHexString() },
+        likes: [],
+        resolved: false,
+        deleted: false,
+        reactions: [],
+        text: 'Hello world',
+        senderId: senderId,
+        conversationId: conversationId,
+        conversation: { id: conversationId.toHexString() },
+        likesCount: 0,
+        sender: { id: senderId.toHexString() },
         }
       );
 
@@ -102,7 +102,7 @@ describe('MessageData', () => {
         senderId,
       );
 
-      const gotMessage = await messageData.getMessage(sentMessage.id.toHexString())
+      const gotMessage = await messageData.getMessage(sentMessage.id.toString(),);
 
       expect(gotMessage).toMatchObject(sentMessage)
     });

@@ -41,17 +41,23 @@ export class MessageData {
     if (!message) throw new Error('Message not found');
     return chatMessageToObject(message);
   }
-
+  
 
   async getChatConversationMessages(
     data: GetMessageDto,
   ): Promise<PaginatedChatMessages> {
     let hasMore = false;
 
-    // TODO Min - Max on limit. There is an issue
-    // with using a limit of zero as it would return
-    // all messages from a conversation
-    if (data.limit === 0) data.limit = 40;
+    // Ensure limit is within a reasonable range to prevent fetching too many messages
+    // If limit is 0 or exceeds the maximum allowed, set it to a default value (e.g., 40)
+    const MIN_LIMIT = 1;
+    const MAX_LIMIT = 100;
+    const DEFAULT_LIMIT = 40;
+    data.limit = Math.max(
+      MIN_LIMIT,
+      Math.min(data.limit || DEFAULT_LIMIT, MAX_LIMIT),
+    );
+
     const hasMoreLimit: number = data.limit + 1;
 
     const query: FilterQuery<ChatMessageDocument> = {
@@ -73,7 +79,7 @@ export class MessageData {
     // we need to ensure we reduce the limit back down to the original
     // limit requested in the api call.
     if (result.length === hasMoreLimit) {
-      result.splice(data.limit);
+      result.pop();
       hasMore = true;
     }
 
@@ -82,14 +88,24 @@ export class MessageData {
     // the offset in ascending order (oldest message first => newest message).
     // If we didn't do it this way round we would get the first N messages
     // ever created in the dataset
-    result.reverse();
+        result.reverse();
 
     return { messages: result.map(chatMessageToObject), hasMore };
   }
 
   async delete(messageId: ObjectID): Promise<ChatMessage> {
-    // TODO allow a message to be marked as deleted
-    return new ChatMessage() // Minimum to pass ts checks -replace this
+    const filterBy = { _id: messageId };
+    const updateProperty = { deleted: true };
+    const deleted = await this.chatMessageModel.findOneAndUpdate(
+      filterBy,
+      updateProperty,
+      {
+        new: true,
+        returnOriginal: false,
+      },
+    );
+    if (!deleted) throw new Error('The message to delete does not exist');
+    return chatMessageToObject(deleted);
   }
 
   async resolve(messageId: ObjectID): Promise<ChatMessage> {
